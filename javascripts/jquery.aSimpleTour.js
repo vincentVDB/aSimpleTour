@@ -30,7 +30,7 @@
     },
     tooltipColors : {
       background: 'rgba(0, 0, 0, 0.70)',
-      color: '#fff',
+      color: '#fff'
     }
   };
 
