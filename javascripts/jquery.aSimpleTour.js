@@ -45,6 +45,7 @@
                       html       : ''
                     }).css({
                       'display'     : 'none',
+                      'z-index'     : '999',    //vdb
                       'padding'     : '10px 20px',
                       'position'    : 'absolute',
                       'font-family' : 'sans-serif',
@@ -69,7 +70,13 @@
           </div>\
         </div>';
         
-        $controlsCss = { 'display' : 'block', 'z-index': '999', 'position': 'fixed', 'width' : '200px', 'padding' : '10px 20px', 'border-radius' : '10px', 'font-family' : 'sans-serif' };
+        $controlsCss = { 'display' : 'block', 
+        		 'z-index': '999', // vdb
+        		 'position': 'fixed', 
+        		 'width' : '200px', 
+        		 'padding' : '10px 20px', 
+        		 'border-radius' : '10px', 
+        		 'font-family' : 'sans-serif' };
         $controls = $(controls).css($controlsCss).css(options.controlsColors);
         $cpos = methods.getControlPosition(options.controlsPosition);
         $controls.css($cpos);
