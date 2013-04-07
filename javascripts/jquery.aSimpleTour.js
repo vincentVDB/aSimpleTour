@@ -19,17 +19,17 @@
     controlsPosition : 'TR',
     welcomeMessage : '<h2>Tour</h2><p>Welcome to the Tour Plugin</p>',
     buttons : {
-      next : 'Next',
-      prev : 'Previous',
-      start : 'Start',
-      end : 'End'
+      next : 'Next >>',
+      prev : '<< Previous',
+      start : 'Start >>',
+      end : 'End [X]'
     },
     controlsColors : {
-      background: 'rgba(8, 68, 142, 0.80)',
+      background: 'rgb(8, 68, 142)', // IE7
       color: '#fff'
     },
     tooltipColors : {
-      background: 'rgba(0, 0, 0, 0.70)',
+      background: 'rgb(0, 0, 0)', // IE7
       color: '#fff'
     }
   };
@@ -59,14 +59,16 @@
         started = true;
         options = $.extend(settings, opts);
         
+      	// HTML control panel 
         controls = '<div id="tourControls">\
+		    	<button id="tourEnd" style="float:right;">'+options.buttons.end+'</button>\
           <div id="tourText">'+options.welcomeMessage+'</div>\
           <div id="tourButtons">\
+            <button id="tourNext"  style="float:right;">'+options.buttons.start+'</button>\
             <button id="tourPrev" style="display:none">'+options.buttons.prev+'</button>\
-            <button id="tourNext">'+options.buttons.start+'</button>\
-            <a href="javascript:void(0);" id="tourEnd" style="display:none; color: #fff; text-decoration: underline; font-size: 12px; float: right">'+options.buttons.end+'</a>\
           </div>\
         </div>';
+        
         $controlsCss = { 'display' : 'block', 'position': 'fixed', 'width' : '200px', 'padding' : '10px 20px', 'border-radius' : '10px', 'font-family' : 'sans-serif' };
         $controls = $(controls).css($controlsCss).css(options.controlsColors);
         $cpos = methods.getControlPosition(options.controlsPosition);
@@ -82,48 +84,54 @@
     },
     next : function() {
       direction = 'f';
-      step++;
-
-      if (step == steps) {
-        methods.destroy();
-      }
-      else {
-        $tooltip.hide();
-        stepData = options.data[step];
-
-        if (step <= steps) {
-          $('#tourPrev').show();
-          $('#tourEnd').show();
-          $('#tourNext').show().html(options.buttons.next);
+      do{ // vdb02
+        step++;
+  
+        if (step == steps) {
+          methods.destroy();
+          return; // vdb02
+        }else{
+          $tooltip.hide();
+          stepData = options.data[step];
+  
+          if (step < steps - 1 ) {
+            $('#tourPrev').show();
+            $('#tourNext').show().html(options.buttons.next);
+          }else{
+      		  $('#tourNext').hide();
+          }
         }
-
-        methods.setTooltip(stepData);
-      }
+      }while( methods.setTooltip(stepData) == false ); // vdb02
     },
     prev : function() {
       direction = 'b';
 
       $tooltip.hide();
+    	do{ // vdb02
 
-      if (step < steps) {
-        $('#tourNext').show().html(options.buttons.next);
-      }
+        if (step < steps) {
+          $('#tourNext').show().html(options.buttons.next);
+        }
+  
+        if (step <= 0) {
+          $('#tourPrev').hide();
+          //$('#tourEnd').hide();
+          $('#tourNext').html(options.buttons.start);
+          step--;
+          return;
+        }
+        else {
+          step--;
+          stepData = options.data[step];
+        }
+  	}while( methods.setTooltip(stepData) == false ); // vdb02
 
-      if (step <= 0) {
-        $('#tourPrev').hide();
-        $('#tourEnd').hide();
-        $('#tourNext').html(options.buttons.start);
-        step--;
-      }
-      else {
-        step--;
-        stepData = options.data[step];
-
-        methods.setTooltip(stepData);
-      }
-    },
+  },
     setTooltip : function(stepData) {
       $element = $(stepData.element);
+    	if( $element.length == 0 ){	// vdb02
+  			return false; // vdb02
+  		};
 
       if (stepData.controlsPosition) {
         methods.setControlsPosition(stepData.controlsPosition);
@@ -131,7 +139,7 @@
 
       if (stepData.tooltip) {
         $tooltip.html(stepData.tooltip);
-        text = (typeof stepData.text != 'undefined') ? stepData.text : stepData.tooltip;
+        text = (typeof stepData.text != 'undefined') ? stepData.text : stepData.welcomeMessage;
         $('#tourText').html(text);
         
         tooltipPos = (typeof stepData.position == 'undefined') ? 'BL' : stepData.position;
@@ -171,6 +179,7 @@
           methods.prev();
         }
       }
+      return true; // vdb02
 
     },
     setControlsPosition : function(pos) {
@@ -197,76 +206,77 @@
       $downArrow = $('<div class="tourArrow"></div>').css({ 'position' : 'absolute', 'display' : 'block', 'width' : '0', 'height' : '0', 'border-left' : '5px solid transparent', 'border-right' : '5px solid transparent', 'border-top' : '5px solid '+tbg });
       $rightArrow = $('<div class="tourArrow"></div>').css({ 'position' : 'absolute', 'display' : 'block', 'width' : '0', 'height' : '0', 'border-top' : '5px solid transparent', 'border-bottom' : '5px solid transparent', 'border-left' : '5px solid '+tbg });
       $leftArrow = $('<div class="tourArrow"></div>').css({ 'position' : 'absolute', 'display' : 'block', 'width' : '0', 'height' : '0', 'border-top' : '5px solid transparent', 'border-bottom' : '5px solid transparent', 'border-right' : '5px solid '+tbg });
+
       switch (pos) {
         case 'BL' :
           position = { 'left'  : el, 'top' : et + eh + 10 };
-          $upArrow.css({ top: '-5px', left: '48%' });
+          $upArrow.css({ top: '-5px', left: tw/2 - 10/2 });
           $tooltip.prepend($upArrow);
           break;
 
         case 'BR' :
-          position = { 'left'  : el + ew - tw, 'top' : et + eh + 10 };
-          $upArrow.css({ top: '-5px', left: '48%' });
+          position = { 'left'  : el + (ew - tw), 'top' : et + eh + 10 };
+          $upArrow.css({ top: '-5px', left: tw/2 - 10/2 });
           $tooltip.prepend($upArrow);
           break;
 
         case 'TL' :
-          position = { 'left'  : el, 'top' : (et - th) -10 };
-          $downArrow.css({ top: th, left: '48%' });
+          position = { 'left'  : el, 'top' : (et - th) - 10 };
+          $downArrow.css({ top: th, left: tw/2 - 10/2 });
           $tooltip.append($downArrow);
           break;
 
         case 'TR' :
-          position = { 'left'  : (el + ew) - tw, 'top' : et - th -10 };
-          $downArrow.css({ top: th, left: '48%' });
+          position = { 'left'  : el + (ew - tw), 'top' : (et - th) - 10 };
+          $downArrow.css({ top: th, left: tw/2 - 10/2 });
           $tooltip.append($downArrow);
           break;
 
         case 'RT' :
-          position = { 'left'  : el + ew + 10, 'top' : et };
-          $leftArrow.css({ left: '-5px' });
+          position = { 'left'  : (el + ew) + 10, 'top' : et };
+          $leftArrow.css({ top: th/2 - 10/2, left: '-5px' });
           $tooltip.prepend($leftArrow);
           break;
 
         case 'RB' :
-          position = { 'left'  : el + ew + 10, 'top' : et + eh - th };
-          $leftArrow.css({ left: '-5px' });
+          position = { 'left'  : (el + ew) + 10, 'top' : et + (eh - th) }; 
+          $leftArrow.css({ top: th/2 - 10/2, left: '-5px' });
           $tooltip.prepend($leftArrow);
           break;
 
         case 'LT' :
           position = { 'left'  : (el - tw) - 10, 'top' : et };
-          $rightArrow.css({ right: '-5px' });
+          $rightArrow.css({ top: th/2 - 10/2, right: '-5px' });
           $tooltip.prepend($rightArrow);
           break;
 
         case 'LB' :
-          position = { 'left'  : (el - tw) - 10, 'top' : et + eh - th};
-          $rightArrow.css({ right: '-5px' });
+          position = { 'left'  : (el - tw) - 10, 'top' : et + (eh - th) };
+          $rightArrow.css({ top: th/2 - 10/2, right: '-5px' });
           $tooltip.prepend($rightArrow);
           break;
 
         case 'B'  :
-          position = { 'left'  : el + ew/2 - tw/2, 'top' : (et + eh) + 10 };
-          $upArrow.css({ top: '-5px', left: '48%' });
+          position = { 'left'  : el + (ew - tw)/2, 'top' : (et + eh) + 10 };
+          $upArrow.css({ top: '-5px', left: tw/2 - 10/2 });
           $tooltip.prepend($upArrow);
           break;
 
         case 'L'  :
-          position = { 'left'  : (el - tw) - 10, 'top' : et + eh/2 - th/2 };
-          $rightArrow.css({ right: '-5px' });
+          position = { 'left'  : (el - tw) - 10, 'top' : et + (eh - th)/2 };
+          $rightArrow.css({ top: th/2 - 10/2, right: '-5px' });
           $tooltip.prepend($rightArrow);
           break;
 
         case 'T'  :
-          position = { 'left'  : el + ew/2 - tw/2, 'top' : (et - th) - 10 };
-          $downArrow.css({ top: th, left: '48%' });
+          position = { 'left'  : el + (ew - tw)/2, 'top' : (et - th) - 10 };
+          $downArrow.css({ top: th, left: tw/2 - 10/2 });
           $tooltip.append($downArrow);
           break;
 
         case 'R'  :
-          position = { 'left'  : (el + ew) + 10, 'top' : et + eh/2 - th/2 };
-          $leftArrow.css({ left: '-5px' });
+          position = { 'left'  : (el + ew) + 10, 'top' : et + (eh - th)/2 };
+          $leftArrow.css({ top: th/2 - 10/2, left: '-5px' });
           $tooltip.prepend($leftArrow);
           break;
       }
@@ -302,15 +312,18 @@
     }
   };
 
-  $('#tourNext').live('click', function() {
+  //$('#tourNext').live('click', function() { // live : deprecied
+  $(document).on('click', '#tourNext', function() {
     methods.next();
   });
 
-  $('#tourPrev').live('click', function() {
+  //$('#tourPrev').live('click', function() {
+  $(document).on('click', '#tourPrev', function() {
     methods.prev();
   });
 
-  $('#tourEnd').live('click', function() {
+  // $('#tourEnd').live('click', function() {
+  $(document).on('click', '#tourEnd', function() {
     methods.destroy();
   })
 
